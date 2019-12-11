@@ -7,9 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] - 2019-12-09
+
+### Changed
+
+- If you set `previewMarkdownFiles` to `true`, all Markdown previews will open instead of the raw files when presentation starts. That means no more glitches when moving to the next slide 👌
+
+![Demo of the improvement][preview-markdown-files-without-glitch]
+
+## [3.1.0] - 2019-12-02
+
 ### Added
 
-- New setting called `previewMarkdownFiles`. When `true` it uses preview mode for Markdown slides. When the user moves away from the Markdown slide, the preview is closed and regenerated for the next Markdown file.
+- New setting called `folder`. If you prefer to put your slides in a subfolder, you can configure the relative path to this folder.
+
+- New setting called `previewMarkdownFiles`. When `true` it uses preview mode for Markdown slides. When the user moves away from the Markdown slide, the preview is closed and regenerated for the next Markdown file:
+
+![Demo of preview markdown files setting][preview-markdown-files]
 
 ## [3.0.0] - 2019-11-23
 
@@ -78,7 +92,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shortcuts to navigate between slides** when activated.
 - **Shortcut to deactivate Slides** when activated.
 
-[unreleased]: https://github.com/nicoespeon/vscode-slides/compare/3.0.0...HEAD
+[unreleased]: https://github.com/nicoespeon/vscode-slides/compare/3.2.0...HEAD
+[3.2.0]: https://github.com/nicoespeon/vscode-slides/compare/3.1.0...3.2.0
+[3.1.0]: https://github.com/nicoespeon/vscode-slides/compare/3.0.0...3.1.0
 [3.0.0]: https://github.com/nicoespeon/vscode-slides/compare/2.0.3...3.0.0
 [2.0.3]: https://github.com/nicoespeon/vscode-slides/compare/2.0.2...2.0.3
 [2.0.2]: https://github.com/nicoespeon/vscode-slides/compare/2.0.1...2.0.2
@@ -88,3 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.2.1]: https://github.com/nicoespeon/vscode-slides/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/nicoespeon/vscode-slides/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/nicoespeon/vscode-slides/compare/8fdc599d586b5ad4614d038d232c840eeebe2412...0.1.0
+
+<!-- Assets -->
+
+[preview-markdown-files]: https://github.com/nicoespeon/vscode-slides/blob/master/assets/features/preview-markdown-files.gif?raw=true
+[preview-markdown-files-without-glitch]: https://github.com/nicoespeon/vscode-slides/blob/master/assets/features/preview-markdown-files-without-glitch.gif?raw=true

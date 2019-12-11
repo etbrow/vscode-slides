@@ -9,7 +9,6 @@ export { Folder };
 
 class VSCodeEditor implements Editor {
   private rootFolder: Folder;
-  private previewedMarkdownUri: vscode.Uri | null = null;
 
   constructor(rootFolder: Folder) {
     this.rootFolder = rootFolder;
@@ -23,11 +22,38 @@ class VSCodeEditor implements Editor {
   }
 
   async openAllFiles() {
-    for (const file of this.rootFolder.visibleFiles) {
-      await this.openFile(file);
+    const { previewMarkdownFiles } = this.getConfiguration();
+
+    for (const file of this.filesFolder.visibleFiles) {
+      if (previewMarkdownFiles && file.isMarkdown) {
+        await this.openMarkdownPreview(file);
+      } else {
+        vscode.commands.executeCommand("vscode.open", file.uri);
+      }
+
+      // Wait so VS Code has time to open the file before we move on.
+      await wait(50);
     }
 
     await vscode.commands.executeCommand("workbench.action.openEditorAtIndex1");
+  }
+
+  private async openMarkdownPreview(file: File) {
+    // Signature of the command we use:
+    // https://github.com/microsoft/vscode/blob/f44dc0853786a1a1c9f5dce5cd94941c2a795655/extensions/markdown-language-features/src/commands/showPreview.ts#L61
+    const uri = file.uri;
+    const allUris = null;
+    const settings = {
+      // Lock the Preview so it doesn't replace the ones already open.
+      locked: true
+    };
+
+    await vscode.commands.executeCommand(
+      "markdown.showPreview",
+      uri,
+      allUris,
+      settings
+    );
   }
 
   async openPreviousFile() {
@@ -36,34 +62,6 @@ class VSCodeEditor implements Editor {
 
   async openNextFile() {
     await vscode.commands.executeCommand("workbench.action.nextEditor");
-  }
-
-  async previewIfMarkdown() {
-    const { previewMarkdownFiles } = this.getConfiguration();
-    if (!previewMarkdownFiles) return;
-
-    const activeWindow = vscode.window.activeTextEditor;
-    if (!activeWindow) return;
-    if (activeWindow.document.languageId !== "markdown") return;
-
-    await vscode.commands.executeCommand("markdown.showPreview");
-    this.previewedMarkdownUri = activeWindow.document.uri;
-  }
-
-  async closeMarkdownPreview() {
-    if (this.previewedMarkdownUri && this.isOnMarkdownPreview) {
-      await vscode.commands.executeCommand(
-        "workbench.action.closeActiveEditor"
-      );
-      await vscode.workspace.openTextDocument(this.previewedMarkdownUri);
-    }
-
-    this.previewedMarkdownUri = null;
-  }
-
-  private get isOnMarkdownPreview(): boolean {
-    // Preview is not an active text editor
-    return !vscode.window.activeTextEditor;
   }
 
   async hideSideBar() {
@@ -128,14 +126,11 @@ class VSCodeEditor implements Editor {
     };
   }
 
-  private async openFile(file: Path): Promise<void> {
-    vscode.commands.executeCommand(
-      "vscode.open",
-      vscode.Uri.file(this.rootFolder.pathTo(file))
-    );
+  private get filesFolder(): Folder {
+    const configuration = vscode.workspace.getConfiguration("slides");
+    const relativePathToFolder = configuration.get<string>("folder", "");
 
-    // Wait so VS Code has time to open the file before we move on.
-    await wait(50);
+    return this.rootFolder.goTo(relativePathToFolder);
   }
 
   private get pathToSettings(): Path {
@@ -191,18 +186,39 @@ class Folder {
     this.path = path;
   }
 
-  get visibleFiles(): Path[] {
+  get visibleFiles(): File[] {
     return fs
       .readdirSync(this.path)
       .filter(
         fileOrDirectory =>
           !fs.statSync(this.pathTo(fileOrDirectory)).isDirectory()
       )
-      .filter(file => !file.startsWith("."));
+      .filter(file => !file.startsWith("."))
+      .map(file => new File(this.pathTo(file)));
   }
 
   pathTo(relativePath: Path): Path {
     return path.join(this.path, relativePath);
+  }
+
+  goTo(relativePath: Path): Folder {
+    return new Folder(this.pathTo(relativePath));
+  }
+}
+
+class File {
+  private path: Path;
+
+  constructor(path: Path) {
+    this.path = path;
+  }
+
+  get uri(): vscode.Uri {
+    return vscode.Uri.file(this.path);
+  }
+
+  get isMarkdown(): boolean {
+    return this.path.endsWith(".md");
   }
 }
 
